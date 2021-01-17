@@ -84,6 +84,7 @@ export PELOTON_PASSWORD=yourpassword
 
 ## Version history
 * **0.1** (2021-01-17) - Initial release.
+* **0.2** (2021-01-17) - Only overwrite existing schedule if `--force` is present
 
 ## License
 

@@ -31,7 +31,12 @@ MAX_NUM_DAYS = 1000
 ################################################################################
 # Argparse setup
 ################################################################################
-parser = argparse.ArgumentParser(description="Peloton Scheduler CLI")
+parser = argparse.ArgumentParser(
+    prog='peloton-scheduler-cli',
+    description="Peloton Scheduler CLI"
+)
+
+parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.2')
 
 subparsers = parser.add_subparsers(
     dest="command",
@@ -46,6 +51,7 @@ subparsers.add_parser("listclasses", help="List bookmarked classes")
 # addschedule subcommand
 sp_addschedule = subparsers.add_parser("addschedule", help="Add a new list of classes to to the schedule")
 sp_addschedule.add_argument("--date", help="The scheduled stack date. Should be a date in the future", required=True)
+sp_addschedule.add_argument("--force", action='store_true', default=False, help="Overwrite an existing class schedule")
 sp_addschedule.add_argument("classes", nargs="+", help="A list of bookmarked class index. Run 'listclasses' first.")
 
 # listschedule subcommand
@@ -69,7 +75,7 @@ sp_showstack = subparsers.add_parser(
 # Subcommand functions
 #
 ################################################################################
-def addschedule(schedule, schedule_date, classes):
+def addschedule(schedule, schedule_date, classes, force=False):
     """
     Add a new scheduled stack to local schedule file.
 
@@ -79,22 +85,26 @@ def addschedule(schedule, schedule_date, classes):
                     PelotonSession.get_bookmarked_classes() function call
     :return: returns nothing
     """
-    # TODO: validate the date
     try:
         datetime.strptime(schedule_date, "%Y-%m-%d")
     except Exception:
         print(f"Unable to parse date (Expected YYYY-MM-DD): {schedule_date}")
-        sys.exit(0)
+        sys.exit(1)
 
     ps = PelotonSession(os.environ["PELOTON_USERNAME"], os.environ["PELOTON_PASSWORD"])
     bc = ps.get_bookmarked_classes()
 
     day_stack = [c for i, c in enumerate(bc) if str(i) in classes]
 
+    if schedule_date in schedule and not force:
+        print("A schedule already exists for this date. Rerun with the --force flag to overwrite")
+        sys.exit(1)
+
     if schedule_date not in schedule:
         schedule[schedule_date] = day_stack
     with open(SCHEDULE_FILE, "w") as f:
         f.write(json.dumps(schedule, indent=4, sort_keys=True))
+    print(f"Successfully saved {len(day_stack)} classes for {schedule_date}")
 
 
 def listclasses():
@@ -225,17 +235,17 @@ def to_tabulate(object_array, include_columns=None):
 def main():
     if 'PELOTON_USERNAME' not in os.environ:
         print("Unable to find environment variable PELOTON_USERNAME. Aborting...")
-        sys.exit(0)
+        sys.exit(1)
     if 'PELOTON_PASSWORD' not in os.environ:
         print("Unable to find environment variable PELOTON_PASSWORD. Aborting...")
-        sys.exit(0)
+        sys.exit(1)
 
     args = parser.parse_args()
     if args.command == "listclasses":
         listclasses()
     elif args.command == "addschedule":
         schedule = load_schedule_from_file()
-        addschedule(schedule, args.date, args.classes)
+        addschedule(schedule, args.date, args.classes, args.force)
     elif args.command == "listschedule":
         schedule = load_schedule_from_file()
         listschedule(schedule, args.next)
