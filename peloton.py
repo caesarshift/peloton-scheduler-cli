@@ -1,6 +1,5 @@
-#TODO: this could use alot of cleanup
+# TODO: this could use alot of cleanup
 import os
-import sys
 
 import requests
 
@@ -229,6 +228,10 @@ fragment ClassDetails on PelotonClass {
             "query": self.get_user_stack_query,
         }
         resp = self.session.post(self.endpoint, json=get_stack, headers=self.headers)
+
+        if not resp.ok:
+            raise Exception(f"Unable to retrieve Peloton stack: {resp.status_code} - {resp._content}")
+
         pstack = resp.json()
 
         my_stack = []
@@ -245,15 +248,17 @@ fragment ClassDetails on PelotonClass {
         return my_stack
 
     def add_class_to_stack(self, peloton_class_id):
-        # "pelotonClassId":"eyJob21lX3BlbG90b25faWQiOiBudWxsLCAicmlkZV9pZCI6ICIyNTA5NTgyNDYzNDI0NzQwYjgzYTUwZmVkMzAyMGRkNyIsICJzdHVkaW9fcGVsb3Rvbl9pZCI6IG51bGwsICJ0eXBlIjogIm9uX2RlbWFuZCJ9"
         add_class_to_stack = {
             "operationName": "AddClassToStack",
             "variables": {"input": {"pelotonClassId": peloton_class_id}},
             "query": self.add_class_to_stack_query,
         }
-        return self.session.post(
+        resp = self.session.post(
             self.endpoint, json=add_class_to_stack, headers=self.headers
         )
+
+        if not resp.ok:
+            raise Exception(f"Unable to add class to stack: {resp.status_code} - {resp._content}")
 
     def clear_stack(self):
         clear_stack = {
@@ -261,7 +266,10 @@ fragment ClassDetails on PelotonClass {
             "variables": {"input": {"pelotonClassIdList": []}},
             "query": self.clear_user_stack_query,
         }
-        return self.session.post(self.endpoint, json=clear_stack, headers=self.headers)
+        resp = self.session.post(self.endpoint, json=clear_stack, headers=self.headers)
+
+        if not resp.ok:
+            raise Exception(f"Unable to clear peloton stack: {resp.status_code} - {resp._content}")
 
 
 class PelotonSession:
@@ -279,16 +287,10 @@ class PelotonSession:
             f"{self.base_url}/auth/login", json=payload, headers=self.headers
         )
 
-        # print(resp._content)
-
-        if 300 <= resp.status_code < 400:
-            raise Exeption("Unexpected Redirect", resp)
-
-        elif 400 <= resp.status_code < 500:
-            raise Exception(message, resp)
-
-        elif 500 <= resp.status_code < 600:
-            raise Exception(message, resp)
+        if not resp.ok:
+            if resp.status_code == 401:
+                raise Exception(f"Invalid username or password: {resp.status_code} - {resp._content}")
+            raise Exception(f"Unable to login and create a Peloton session: {resp.status_code} - {resp._content}")
 
         # print(resp.json()['user_id'])
 
@@ -308,6 +310,9 @@ class PelotonSession:
             params=query_params,
             headers=self.headers,
         )
+
+        if not resp.ok:
+            raise Exception(f"Unable to retrieve bookmarked classes: {resp.status_code} - {resp._content}")
 
         # print(resp._content)
         pclass = resp.json()
