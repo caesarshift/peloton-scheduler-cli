@@ -115,8 +115,7 @@ def addschedule(schedule, schedule_date, classes, force=False):
         )
         sys.exit(1)
 
-    if schedule_date not in schedule:
-        schedule[schedule_date] = day_stack
+    schedule[schedule_date] = day_stack
     with open(SCHEDULE_FILE, "w") as f:
         f.write(json.dumps(schedule, indent=4, sort_keys=True))
     print(f"Successfully saved {len(day_stack)} classes for {schedule_date}")
