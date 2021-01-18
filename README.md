@@ -33,7 +33,7 @@ venv .venv
 pip install -r requirements.txt
 ```
 
-### Save Peloton username and password to an environment variable (Windows):
+### Save Peloton username and password to an environment variable:
 
 ```
 set PELOTON_USERNAME=youremail@domain.com
@@ -48,12 +48,12 @@ set PELOTON_PASSWORD=yourpassword
 git clone https://github.com/caesarshift/peloton-scheduler-cli.git
 cd peloton-scheduler-cli
 mkdir .venv
-venv .venv
-.venv/source/activate
+python -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Save Peloton username and password to an environment variable (Linux):
+### Save Peloton username and password to an environment variable:
 
 ```
 export PELOTON_USERNAME=youremail@domain.com
@@ -83,8 +83,8 @@ export PELOTON_PASSWORD=yourpassword
 `python scheduler.py loadschedule`
 
 ## Version history
-* **0.1** (2021-01-17) - Initial release.
 * **0.2** (2021-01-17) - Only overwrite existing schedule if `--force` is present
+* **0.1** (2021-01-17) - Initial release.
 
 ## License
 

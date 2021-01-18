@@ -32,11 +32,10 @@ MAX_NUM_DAYS = 1000
 # Argparse setup
 ################################################################################
 parser = argparse.ArgumentParser(
-    prog='peloton-scheduler-cli',
-    description="Peloton Scheduler CLI"
+    prog="peloton-scheduler-cli", description="Peloton Scheduler CLI"
 )
 
-parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.2')
+parser.add_argument("-v", "--version", action="version", version="%(prog)s 0.2")
 
 subparsers = parser.add_subparsers(
     dest="command",
@@ -49,14 +48,31 @@ subparsers = parser.add_subparsers(
 subparsers.add_parser("listclasses", help="List bookmarked classes")
 
 # addschedule subcommand
-sp_addschedule = subparsers.add_parser("addschedule", help="Add a new list of classes to to the schedule")
-sp_addschedule.add_argument("--date", help="The scheduled stack date. Should be a date in the future", required=True)
-sp_addschedule.add_argument("--force", action='store_true', default=False, help="Overwrite an existing class schedule")
-sp_addschedule.add_argument("classes", nargs="+", help="A list of bookmarked class index. Run 'listclasses' first.")
+sp_addschedule = subparsers.add_parser(
+    "addschedule", help="Add a new list of classes to the schedule"
+)
+sp_addschedule.add_argument(
+    "--date",
+    help="The scheduled stack date. Should be a date in the future",
+    required=True,
+)
+sp_addschedule.add_argument(
+    "--force",
+    action="store_true",
+    default=False,
+    help="Overwrite an existing class schedule",
+)
+sp_addschedule.add_argument(
+    "classes",
+    nargs="+",
+    help="A list of bookmarked class index. Run 'listclasses' first.",
+)
 
 # listschedule subcommand
 sp_listschedule = subparsers.add_parser("listschedule")
-sp_listschedule.add_argument("--next", help="Show schedule for next N number of days", default=MAX_NUM_DAYS)
+sp_listschedule.add_argument(
+    "--next", help="Show schedule for next N number of days", default=MAX_NUM_DAYS
+)
 
 # loadschedule subcommand
 sp_loadschedule = subparsers.add_parser(
@@ -65,9 +81,7 @@ sp_loadschedule = subparsers.add_parser(
 sp_loadschedule.add_argument("--date", help="Date to load (optional). Default is today")
 
 # showstack subcommand
-sp_showstack = subparsers.add_parser(
-    "showstack", help="Show the Peloton stack"
-)
+sp_showstack = subparsers.add_parser("showstack", help="Show the Peloton stack")
 
 
 ################################################################################
@@ -80,9 +94,8 @@ def addschedule(schedule, schedule_date, classes, force=False):
     Add a new scheduled stack to local schedule file.
 
     :param schedule: A dictionary of scheduled classes (each date is a key)
-    :param schedule_date: A date for the scheduled stack. Use YYYY-MM-DD format.
-    :param classes: An object array of classes that was retrieved from the
-                    PelotonSession.get_bookmarked_classes() function call
+    :param schedule_date: A date string for the scheduled stack. Use YYYY-MM-DD format.
+    :param force: If a schedule already exists for the schedule_date, overwrite it.
     :return: returns nothing
     """
     try:
@@ -97,7 +110,9 @@ def addschedule(schedule, schedule_date, classes, force=False):
     day_stack = [c for i, c in enumerate(bc) if str(i) in classes]
 
     if schedule_date in schedule and not force:
-        print("A schedule already exists for this date. Rerun with the --force flag to overwrite")
+        print(
+            "A schedule already exists for this date. Rerun with the --force flag to overwrite"
+        )
         sys.exit(1)
 
     if schedule_date not in schedule:
@@ -142,9 +157,10 @@ def listschedule(schedule, next_num_days):
 
 def loadschedule(schedule, load_date=None):
     """
-    Load a list of classes to into the Peloton stack.
+    Load a list of classes into the Peloton stack.
 
-    :param schedule: A dictionary of scheduled classes (each date is a key)
+    :param schedule: A dictionary of scheduled classes (each date is a key; each value is an array
+                     of classes)
     :param load_date: A date string in format YYYY-MM-DD
     :return: returns nothing
     """
@@ -167,7 +183,8 @@ def loadschedule(schedule, load_date=None):
 
     # Add stacked classes in order
     for c in schedule[load_date_str]:
-        resp = stack.add_class_to_stack(c["Token"])
+        stack.add_class_to_stack(c["Token"])
+        # resp = stack.add_class_to_stack(c["Token"])
         # print(resp.json())
 
     print("The new stack:")
@@ -233,10 +250,10 @@ def to_tabulate(object_array, include_columns=None):
 #
 ################################################################################
 def main():
-    if 'PELOTON_USERNAME' not in os.environ:
+    if "PELOTON_USERNAME" not in os.environ:
         print("Unable to find environment variable PELOTON_USERNAME. Aborting...")
         sys.exit(1)
-    if 'PELOTON_PASSWORD' not in os.environ:
+    if "PELOTON_PASSWORD" not in os.environ:
         print("Unable to find environment variable PELOTON_PASSWORD. Aborting...")
         sys.exit(1)
 
